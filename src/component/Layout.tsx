@@ -5,7 +5,7 @@ import AOS from "aos";
 import "aos/dist/aos.css";
 
 interface LayoutProps {
-  children: React.ReactNode; // ✅ safest and universal way
+  children: React.ReactNode; 
 }
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {

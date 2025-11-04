@@ -18,6 +18,13 @@ interface InputPanelProps {
   setSummary: React.Dispatch<React.SetStateAction<string>>;
 }
 
+// 💡 Word Count Calculation Helper Function
+const calculateWordCount = (text: string): number => {
+  // Trim whitespace, split by any sequence of whitespace, and filter out empty strings
+  const words = text.trim().split(/\s+/).filter(word => word.length > 0);
+  return words.length;
+};
+
 const InputPanel: React.FC<InputPanelProps> = ({
   text,
   setText,
@@ -29,6 +36,10 @@ const InputPanel: React.FC<InputPanelProps> = ({
   setLength,
   setSummary,
 }) => {
+
+  // 💡 Calculate word count for the input text
+  const inputWordCount = calculateWordCount(text);
+
   return (
     <motion.div
       className="flex-1 bg-gray-50 p-4 rounded-lg shadow-md flex flex-col justify-between gap-3"
@@ -42,6 +53,11 @@ const InputPanel: React.FC<InputPanelProps> = ({
         <FileUpload file={file} setFile={setFile} />
         <ModeToggle mode={mode} setMode={setMode} />
         <SummaryLengthSlider length={length} setLength={setLength} />
+
+        {/* 🔑 INPUT WORD COUNT DISPLAY */}
+        <p className="text-sm text-gray-500 mt-1">
+          Input Words: <span className="font-bold text-gray-700">{inputWordCount}</span>
+        </p>
       </div>
 
       <SummaryButton

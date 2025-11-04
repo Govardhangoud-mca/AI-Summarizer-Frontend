@@ -1,94 +1,53 @@
-// src/api/authApi.ts
 
 import Swal from 'sweetalert2';
 
 const BASE_URL = "http://localhost:8080/api/v1/auth";
-const LOGIN_URL = "http://localhost:8080/api/v1/auth/login"; 
+const REGISTER_URL = `${BASE_URL}/register`;
+const LOGIN_URL = `${BASE_URL}/login`;
 
-// 🛑 FIX: Removed unused interface LoginResponse
 
-// --- REGISTER API ---
-
-export const registerAPI = async (username: string, password: string): Promise<boolean> => {
+export const registerAPI = async (username: string, password: string, role: string = "USER"): Promise<boolean> => {
     try {
-        const res = await fetch(`${BASE_URL}/register`, {
+        const res = await fetch(REGISTER_URL, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ username, password })
+            body: JSON.stringify({ username, password, role }),
+            credentials: "include", 
         });
 
         if (!res.ok) {
-            const errorData = await res.json().catch(() => ({ message: `HTTP status ${res.status}` }));
-            Swal.fire('Registration Failed', errorData.message || 'Error occurred during registration.', 'error');
+            const errorData = await res.json().catch(() => ({ message: `HTTP ${res.status}` }));
+            Swal.fire("Registration Failed", errorData.message || "Error during registration.", "error");
             return false;
         }
 
-        Swal.fire('Success', 'Registration successful! You can now log in.', 'success');
+        Swal.fire("Success", "Registration successful! You can now log in.", "success");
         return true;
     } catch (error) {
-        Swal.fire('Error', 'Network error during registration.', 'error');
+        Swal.fire("Error", "Network error during registration.", "error");
         return false;
     }
 };
 
-// --- LOGIN API ---
-
-export const loginAPI = async (username: string, password: string): Promise<boolean> => {
+export const loginAPI = async (username: string, password: string): Promise<{ success: boolean; token?: string }> => {
     try {
-        const res = await fetch(`${LOGIN_URL}`, {
+        const res = await fetch(LOGIN_URL, {
             method: "POST",
-            headers: { 
-                "Content-Type": "application/json" 
-            },
-            // CRITICAL: Tells the browser to send the cookie in response
-            credentials: 'include', 
-            // Send username and password in the JSON body, as configured in the backend controller.
-            body: JSON.stringify({ username, password }) 
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, password }),
+            credentials: "include", 
         });
 
         if (res.ok) {
-            // Success! The JSESSIONID cookie is now stored by the browser.
-            return true;
+            const data = await res.json();
+            return { success: true, token: data.token };
         } else {
-            // Handle 401 Unauthorized or other login failures
-            const errorText = await res.text();
-            let errorMessage = "Login failed.";
-            
-            // Check for specific error message if the response body is JSON
-            try {
-                const errorData = JSON.parse(errorText);
-                errorMessage = errorData.message || errorMessage;
-            } catch {
-                // Ignore if it's not JSON
-            }
-            
-            Swal.fire('Login Failed', errorMessage, 'error');
-            return false;
+            const errorData = await res.json().catch(() => ({ message: "Invalid credentials" }));
+            Swal.fire("Login Failed", errorData.message || "Invalid username or password", "error");
+            return { success: false };
         }
     } catch (error) {
-        Swal.fire('Error', 'Network error during login.', 'error');
-        return false;
-    }
-};
-
-// --- LOGOUT API ---
-
-export const logoutAPI = async (): Promise<boolean> => {
-    try {
-        // Send a POST request to logout
-        const res = await fetch(`${BASE_URL}/logout`, {
-            method: "POST",
-            credentials: 'include' // Must send the cookie so the server knows which session to invalidate
-        });
-
-        if (res.ok) {
-            return true;
-        } else {
-            console.error("Server logout failed:", res.status);
-            return false;
-        }
-    } catch (error) {
-        console.error("Network error during logout:", error);
-        return false;
+        Swal.fire("Error", "Network error during login.", "error");
+        return { success: false };
     }
 };

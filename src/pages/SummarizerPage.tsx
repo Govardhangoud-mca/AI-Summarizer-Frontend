@@ -15,7 +15,7 @@ const SummarizerPage: React.FC = () => {
   const [summary, setSummary] = useState<string>("");
 
   return (
-    <Layout> 
+    <Layout>
       <div
         className="min-h-full w-full flex flex-col gap-6 p-6 md:p-10
           bg-gradient-to-br from-[#030014] via-[#1a0a2f] to-[#0c0420] 

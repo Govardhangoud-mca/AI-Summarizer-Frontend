@@ -1,9 +1,11 @@
+// THIS IS HEADER.TSX FILE
+
 import React, { useEffect } from "react";
 import { motion } from "framer-motion";
 import AOS from "aos";
 import "aos/dist/aos.css";
 import { useAuth } from "../context/AuthContext";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom"; // 🔑 Import useNavigate
 
 const Header: React.FC = () => {
   useEffect(() => {
@@ -11,10 +13,13 @@ const Header: React.FC = () => {
   }, []);
 
   const { isAuthenticated, logout } = useAuth();
+  const navigate = useNavigate(); // 🔑 Initialize useNavigate
 
+  // 🔑 FIX APPLIED: Logout now clears auth and forces navigation to "/"
   const handleLogout = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
-    logout();
+    logout(); // Clears token in localStorage
+    navigate("/"); // 🎯 Navigate directly to the Welcome Page (/)
   };
 
   return (
@@ -44,7 +49,6 @@ const Header: React.FC = () => {
           <span className="absolute left-0 -bottom-1 w-0 h-[2px] bg-gradient-to-r from-blue-400 to-purple-500 group-hover:w-full transition-all duration-300"></span>
         </Link>
 
-        {/* Conditional rendering: Only show Logout if isAuthenticated is true */}
         {isAuthenticated && (
           <button
             onClick={handleLogout}
@@ -53,7 +57,6 @@ const Header: React.FC = () => {
             Logout
           </button>
         )}
-        {/* The space for Login/Register is now intentionally empty if the user is logged out */}
       </nav>
     </motion.header>
   );

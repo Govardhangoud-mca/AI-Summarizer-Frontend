@@ -1,97 +1,102 @@
-// src/context/AuthContext.tsx
+import React, { createContext, useContext, useState, type ReactNode } from "react";
+import Swal from "sweetalert2";
 
-import React, { createContext, useContext, useState, type ReactNode } from 'react';
-// Ensure the correct imports from your API file
-import { loginAPI, registerAPI, logoutAPI } from '../api/authApi'; 
-import Swal from 'sweetalert2';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate for redirects
+const BASE_URL = "http://localhost:8080/api/v1/auth";
+const LOGIN_URL = `${BASE_URL}/login`;
+const REGISTER_URL = `${BASE_URL}/register`;
 
 interface AuthContextType {
-    isAuthenticated: boolean;
-    user: string | null;
-    token: string | null; 
-    login: (username: string, password: string) => Promise<boolean>;
-    logout: () => void;
-    register: (username: string, password: string) => Promise<boolean>;
+  isAuthenticated: boolean;
+  token: string | null;
+  role: string | null;
+  login: (username: string, password: string) => Promise<boolean>;
+  register: (username: string, password: string, role: string) => Promise<boolean>;
+  logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-    // Initialize state from localStorage
-    const [token, setToken] = useState<string | null>(localStorage.getItem('authToken'));
-    const [user, setUser] = useState<string | null>(localStorage.getItem('authUser'));
-    
-    // Derived state for easy checking
-    const isAuthenticated = !!token;
-    
-    const navigate = useNavigate(); // Hook for redirection
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const [token, setToken] = useState<string | null>(localStorage.getItem("token"));
+  const [role, setRole] = useState<string | null>(localStorage.getItem("role"));
 
-    const login = async (username: string, password: string): Promise<boolean> => {
-        try {
-            // 1. Call API to get cookie (returns boolean success)
-            const success = await loginAPI(username, password); 
-            
-            if (success) {
-                // 2. On success, update local state (Browser handles JSESSIONID cookie)
-                
-                // Since we don't get a JWT, use a dummy token to mark the session active
-                const dummyToken = 'session-active';
-                setToken(dummyToken);
-                setUser(username);
-                localStorage.setItem('authToken', dummyToken);
-                localStorage.setItem('authUser', username);
-                
-                return true;
-            }
-            return false;
-        } catch (error) {
-            console.error("Login failed via context:", error);
-            // Error handling is primarily done in loginAPI, this catches only unexpected issues
-            return false;
-        }
-    };
+  const isAuthenticated = !!token;
 
-    const logout = async () => {
-        // 1. Call the backend API to invalidate the session
-        // 🛑 FIX: Removed 'const success = ' since the return value is not used
-        await logoutAPI(); 
+  // --- LOGIN FUNCTION ---
+  const login = async (username: string, password: string): Promise<boolean> => {
+    try {
+      const res = await fetch(LOGIN_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
 
-        // 2. Clear local state and localStorage regardless of backend result (for UI consistency)
-        setToken(null);
-        setUser(null);
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('authUser');
-        
-        // 3. Provide user feedback and redirect
-        Swal.fire({
-            icon: 'info',
-            title: 'Logged Out',
-            text: 'You have been successfully logged out.',
-            timer: 1500,
-            showConfirmButton: false
-        });
-        
-        // Navigate to a non-authenticated page, typically the home or login page
-        navigate('/'); 
-    };
+      if (!res.ok) {
+        const error = await res.json().catch(() => ({ message: "Invalid credentials" }));
+        Swal.fire("Login Failed", error.message || "Invalid credentials", "error");
+        return false;
+      }
 
-    const register = async (username: string, password: string): Promise<boolean> => {
-        // Simple passthrough to the API function
-        return registerAPI(username, password); 
-    };
+      const data = await res.json();
 
-    return (
-        <AuthContext.Provider value={{ isAuthenticated, user, token, login, logout, register }}>
-            {children}
-        </AuthContext.Provider>
-    );
+      // ✅ Store JWT + Role
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("role", data.role);
+      localStorage.setItem("username", data.username);
+
+      setToken(data.token);
+      setRole(data.role);
+
+      Swal.fire("Success", "Login successful!", "success");
+      return true;
+    } catch (err) {
+      Swal.fire("Error", "Network error during login", "error");
+      return false;
+    }
+  };
+
+  // --- REGISTER FUNCTION ---
+  const register = async (username: string, password: string, role: string): Promise<boolean> => {
+    try {
+      const res = await fetch(REGISTER_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password, role }),
+      });
+
+      if (!res.ok) {
+        const error = await res.json().catch(() => ({ message: "Error occurred" }));
+        Swal.fire("Registration Failed", error.message, "error");
+        return false;
+      }
+
+      Swal.fire("Success", "Registration successful! Please log in.", "success");
+      return true;
+    } catch (err) {
+      Swal.fire("Error", "Network error during registration", "error");
+      return false;
+    }
+  };
+
+  // --- LOGOUT FUNCTION ---
+  const logout = () => {
+    setToken(null);
+    setRole(null);
+    localStorage.removeItem("token");
+    localStorage.removeItem("role");
+    localStorage.removeItem("username");
+    Swal.fire("Logged out", "You have been logged out successfully", "info");
+  };
+
+  return (
+    <AuthContext.Provider value={{ isAuthenticated, token, role, login, register, logout }}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
 export const useAuth = () => {
-    const context = useContext(AuthContext);
-    if (context === undefined) {
-        throw new Error('useAuth must be used within an AuthProvider');
-    }
-    return context;
+  const context = useContext(AuthContext);
+  if (!context) throw new Error("useAuth must be used within AuthProvider");
+  return context;
 };

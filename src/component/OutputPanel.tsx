@@ -9,6 +9,13 @@ interface OutputPanelProps {
   summary: string;
 }
 
+// 💡 Word Count Calculation Helper Function
+const calculateWordCount = (text: string): number => {
+  // Trim whitespace, split by any sequence of whitespace, and filter out empty strings
+  const words = text.trim().split(/\s+/).filter(word => word.length > 0);
+  return words.length;
+};
+
 const OutputPanel: React.FC<OutputPanelProps> = ({ summary }) => {
   useEffect(() => {
     AOS.init({ once: true, duration: 600 });
@@ -31,6 +38,9 @@ const OutputPanel: React.FC<OutputPanelProps> = ({ summary }) => {
     URL.revokeObjectURL(url);
   };
 
+  // 💡 Calculate word count for the summary output
+  const outputWordCount = calculateWordCount(summary);
+
   return (
     <motion.div
       data-aos="fade-left"
@@ -48,6 +58,11 @@ const OutputPanel: React.FC<OutputPanelProps> = ({ summary }) => {
           {summary || "✨ Your summarized text will appear here..."}
         </p>
       </div>
+
+      {/* 🔑 OUTPUT WORD COUNT DISPLAY */}
+      <p className="text-sm text-gray-400">
+        Output Words: <span className="font-bold text-white">{outputWordCount}</span>
+      </p>
 
       <div className="flex gap-3 mt-3">
         <button
