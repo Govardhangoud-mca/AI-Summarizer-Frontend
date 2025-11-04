@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, type ReactNode } from "react";
+// src/context/AuthContext.tsx
+import { createContext, useContext, useState, type ReactNode } from "react";
 import Swal from "sweetalert2";
 
 const BASE_URL = "http://localhost:8080/api/v1/auth";
@@ -9,6 +10,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   token: string | null;
   role: string | null;
+  username: string | null;
   login: (username: string, password: string) => Promise<boolean>;
   register: (username: string, password: string, role: string) => Promise<boolean>;
   logout: () => void;
@@ -19,6 +21,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [token, setToken] = useState<string | null>(localStorage.getItem("token"));
   const [role, setRole] = useState<string | null>(localStorage.getItem("role"));
+  const [username, setUsername] = useState<string | null>(localStorage.getItem("username"));
 
   const isAuthenticated = !!token;
 
@@ -39,13 +42,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       const data = await res.json();
 
-      // ✅ Store JWT + Role
+      // ✅ Store JWT + Role + Username
       localStorage.setItem("token", data.token);
       localStorage.setItem("role", data.role);
       localStorage.setItem("username", data.username);
 
       setToken(data.token);
       setRole(data.role);
+      setUsername(data.username);
 
       Swal.fire("Success", "Login successful!", "success");
       return true;
@@ -82,6 +86,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = () => {
     setToken(null);
     setRole(null);
+    setUsername(null);
     localStorage.removeItem("token");
     localStorage.removeItem("role");
     localStorage.removeItem("username");
@@ -89,7 +94,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, token, role, login, register, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated, token, role, username, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );
