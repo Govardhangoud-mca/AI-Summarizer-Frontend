@@ -42,10 +42,10 @@ const AdminDashboard: React.FC = () => {
 
     try {
       const [historyRes, usersRes] = await Promise.all([
-        fetch(`http://localhost:8080/api/v1/admin/history?timeFilter=${currentFilter}`, { 
+        fetch(`https://ai-summarizer-backend-8.onrender.com/api/v1/admin/history?timeFilter=${currentFilter}`, { 
           headers: { Authorization: `Bearer ${token}` },
         }),
-        fetch("http://localhost:8080/api/v1/admin/users", {
+        fetch("https://ai-summarizer-backend-8.onrender.com/api/v1/admin/users", {
           headers: { Authorization: `Bearer ${token}` },
         }),
       ]);
@@ -97,7 +97,7 @@ const AdminDashboard: React.FC = () => {
 
     try {
       const response = await fetch(
-        `http://localhost:8080/api/v1/admin/users/${userId}`,
+        `https://ai-summarizer-backend-8.onrender.com/api/v1/admin/users/${userId}`,
         {
           method: "DELETE",
           headers: {

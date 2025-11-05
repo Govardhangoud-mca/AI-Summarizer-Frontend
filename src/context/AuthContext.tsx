@@ -2,7 +2,7 @@
 import { createContext, useContext, useState, type ReactNode } from "react";
 import Swal from "sweetalert2";
 
-const BASE_URL = "http://localhost:8080/api/v1/auth";
+const BASE_URL = "https://ai-summarizer-backend-8.onrender.com/api/v1/auth";
 const LOGIN_URL = `${BASE_URL}/login`;
 const REGISTER_URL = `${BASE_URL}/register`;
 

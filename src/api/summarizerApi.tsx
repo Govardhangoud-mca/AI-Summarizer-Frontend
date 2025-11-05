@@ -1,6 +1,6 @@
 // src/api/summarizerApi.ts
 
-const BASE_URL = "http://localhost:8080/api/v1/text";
+const BASE_URL = "https://ai-summarizer-backend-8.onrender.com/api/v1/text";
 
 export interface SummaryResponse {
     summary: string;
