@@ -12,8 +12,8 @@ export const registerAPI = async (username: string, password: string, role: stri
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ username, password, role }),
-            credentials: "include", 
         });
+
 
         if (!res.ok) {
             const errorData = await res.json().catch(() => ({ message: `HTTP ${res.status}` }));
@@ -35,8 +35,8 @@ export const loginAPI = async (username: string, password: string): Promise<{ su
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ username, password }),
-            credentials: "include", 
         });
+
 
         if (res.ok) {
             const data = await res.json();
